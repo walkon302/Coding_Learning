@@ -1,0 +1,108 @@
+class Node(object):
+    
+    def __init__(self, key=None, weight=float('inf')):
+        self.key = key
+        self.nbr = {}
+        self.weight = weight
+        
+    def add_nbr(self, key=None, distance=0):
+        self.nbr[key] = distance
+        
+class Graph(object):
+    
+    def __init__(self):
+        self.node_list = {}
+    
+    def add_node(self, key=None):
+        self.node_list[key] = Node(key)
+    
+    def add_edge(self, start=None, end=None, distance=None):
+        self.node_list[start].add_nbr(end, distance)
+        
+    def __getitem__(self, key):
+        return self.node_list[key]
+        
+def dijkstra(graph, start_key=None):
+    
+    # Reset all the weight to infinity
+    for n in graph.node_list:
+        graph[n].weight = float('inf')
+    # This is only for derected graph
+    # Store the result as dict of node and the final distance
+    result = {}
+    
+    # Get the start node from the graph node list
+    start_node = graph.node_list[start_key]
+    # Set the start point weight to zero
+    start_node.weight = 0
+    
+    # Stored the visited history. make sure that initial value is
+    # only changed to original distance when the node is first time
+    # visited.
+    visited = [start_node.key]
+    
+    # Create a stack, just like BFS.
+    stack = [start_node.key]
+    
+    while stack:
+        node_key = stack.pop()
+        # get the node information from graph node list
+        node = graph[node_key]
+        # Push all the neighbors of node into stack
+        
+        for n in node.nbr:
+            # Only push the unvisited node into stack
+            if n not in visited:
+                stack.append(n)
+                
+        for key, d in node.nbr.iteritems():
+            # Check whether the neighbor is visited the first time
+            if key not in visited:
+                # If so, check whether the neighbor is the direct neighbor
+                # of the start node
+                
+                if key in graph[start_node.key].nbr:
+                    # If so, assign the new weight based on the direct
+                    # distance between nbr and the start node.
+                    graph[key].weight = d
+                    # Store the history
+                    visited.append(key)
+            
+            # Calculate the new weight based on current node and the
+            # distance between current node.
+            new_dist = node.weight + node.nbr[key]
+            
+            # Repalce the weight if the new distance is smaller than
+            # previous weight
+            if graph[key].weight > new_dist:
+                graph[key].weight = new_dist
+            
+            # Exclude the start point
+            if key != start_key:
+                result[key] = graph.node_list[key].weight
+    
+    return result
+    
+if __name__ == '__main__':
+    g = Graph()
+    g.add_node('a')
+    g.add_node('b')
+    g.add_node('c')
+    g.add_node('d')
+    g.add_node('f')
+    g.add_node('e')
+
+    g.add_edge('a', 'b', 2)
+    g.add_edge('b', 'a', 2)
+    
+    g.add_edge('a', 'c', 1)
+    g.add_edge('c', 'a', 1)
+
+    g.add_edge('c', 'd', 3)
+
+    g.add_edge('d', 'e', 4)
+
+    g.add_edge('a', 'e', 5)
+    
+    for i in ['a', 'b', 'c', 'd', 'e']:
+        print i, dijkstra(g, i)
